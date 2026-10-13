@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>食譜庫 · Pixel Kitchen</title>
+  <style>
+    :root {
+      --bg: #fff7ed;
+      --card: #ffffff;
+      --ink: #1c1917;
+      --accent: #ea580c;
+      --accent2: #db2777;
+      --line: #fed7aa;
+      --shadow: 0 12px 30px rgba(234, 88, 12, 0.12);
+      --radius: 18px;
+      --font: "SF Pro Text", "PingFang HK", "Noto Sans TC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: var(--font); color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, #fdba74 0%, transparent 35%),
+        radial-gradient(circle at 90% 5%, #f9a8d4 0%, transparent 30%),
+        radial-gradient(circle at 50% 100%, #86efac 0%, transparent 40%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 72px; }
+    header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 16px; margin-bottom: 22px; flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0; font-size: 1.85rem; letter-spacing: -0.03em;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .sub { color: #c2410c; margin-top: 6px; font-size: 0.92rem; font-weight: 600; }
+    button {
+      appearance: none; border: none; cursor: pointer; border-radius: 999px;
+      padding: 11px 16px; font: inherit; font-weight: 700;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    button:active { transform: scale(0.98); }
+    .primary {
+      background: linear-gradient(135deg, #ea580c, #db2777);
+      color: white; box-shadow: 0 8px 18px rgba(219, 39, 119, 0.25);
+    }
+    .ghost { background: white; color: var(--ink); border: 2px solid var(--line); }
+    .danger { background: #fecdd3; color: #9f1239; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+    .filters {
+      background: rgba(255,255,255,0.85); border: 2px solid var(--line);
+      border-radius: var(--radius); padding: 14px; margin-bottom: 16px;
+    }
+    .filters h3 { margin: 0 0 10px; font-size: 0.95rem; color: #9a3412; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      border-radius: 999px; padding: 6px 12px; font-size: 0.82rem; font-weight: 700;
+      border: 2px solid transparent; cursor: pointer; user-select: none;
+      background: #ffedd5; color: #9a3412;
+    }
+    .tag.cuisine { background: #fce7f3; color: #9d174d; }
+    .tag.ing { background: #dcfce7; color: #166534; }
+    .tag.active { border-color: currentColor; box-shadow: 0 0 0 2px rgba(234,88,12,0.15); }
+    .tag.static { cursor: default; }
+    input, textarea, select {
+      width: 100%; font: inherit; color: var(--ink);
+      border: 2px solid var(--line); border-radius: 14px;
+      padding: 11px 12px; background: white;
+    }
+    textarea { min-height: 88px; resize: vertical; line-height: 1.45; }
+    label { display: block; font-size: 0.84rem; font-weight: 700; margin-bottom: 6px; color: #9a3412; }
+    .field { margin-bottom: 14px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    .cards {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card); border: 2px solid var(--line);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+      cursor: pointer; transition: transform .15s ease, border-color .15s ease;
+    }
+    .card:hover { transform: translateY(-3px); border-color: #fb923c; }
+    .card.match { border-color: #22c55e; }
+    .card.partial { border-color: #f59e0b; }
+    .card-cover {
+      width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block;
+      background: linear-gradient(135deg, #fdba74, #f9a8d4);
+    }
+    .card-body { padding: 14px 14px 16px; }
+    .card h3 { margin: 0 0 8px; font-size: 1.12rem; }
+    .meta { color: #c2410c; font-size: 0.84rem; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+    .chip {
+      display: inline-flex; background: #ffedd5; color: #9a3412;
+      border-radius: 999px; padding: 3px 9px; font-size: 0.76rem; font-weight: 700;
+    }
+    .match-badge {
+      display: inline-flex; border-radius: 999px; padding: 3px 9px;
+      font-size: 0.74rem; font-weight: 800;
+    }
+    .match-badge.full { background: #dcfce7; color: #166534; }
+    .match-badge.partial { background: #fef3c7; color: #92400e; }
+    .empty {
+      text-align: center; padding: 48px 20px; color: #c2410c; font-weight: 600;
+      background: rgba(255,255,255,0.8); border: 2px dashed #fdba74; border-radius: var(--radius);
+    }
+    .panel {
+      background: var(--card); border: 2px solid var(--line);
+      border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+    }
+    .hidden { display: none !important; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    .hero {
+      width: 100%; max-height: 360px; object-fit: cover; border-radius: 16px;
+      border: 2px solid var(--line); margin-bottom: 14px; display: block;
+    }
+    .detail-title { margin: 0 0 8px; font-size: 1.65rem; }
+    .section-title {
+      margin: 22px 0 12px; font-size: 0.9rem; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--accent2); font-weight: 800;
+    }
+    .media-row {
+      display: grid; grid-template-columns: 120px 1fr; gap: 14px;
+      align-items: center; padding: 12px; margin-bottom: 10px;
+      background: #fff7ed; border: 2px solid #fed7aa; border-radius: 16px;
+    }
+    .media-row img {
+      width: 120px; height: 120px; object-fit: cover; border-radius: 14px;
+      border: 2px solid #fdba74; background: white;
+    }
+    .step-row {
+      display: grid; grid-template-columns: 1fr; gap: 10px;
+      padding: 14px; margin-bottom: 12px;
+      background: linear-gradient(180deg, #fff, #fff7ed);
+      border: 2px solid #f9a8d4; border-radius: 16px;
+    }
+    .step-row img {
+      width: 100%; max-height: 280px; object-fit: cover; border-radius: 14px;
+      border: 2px solid #fbcfe8;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 999px; margin-right: 8px;
+      background: linear-gradient(135deg, #ea580c, #db2777); color: white;
+      font-weight: 800; font-size: 0.85rem;
+    }
+    .notes {
+      white-space: pre-wrap; background: #fef3c7; border-radius: 14px;
+      padding: 12px; border: 2px solid #fde68a; line-height: 1.5;
+    }
+    .row-editor {
+      border: 2px dashed #fdba74; border-radius: 16px; padding: 12px;
+      margin-bottom: 10px; background: #fffbeb;
+    }
+    .row-editor .top {
+      display: grid; grid-template-columns: 96px 1fr auto; gap: 10px; align-items: start;
+    }
+    .thumb {
+      width: 96px; height: 96px; object-fit: cover; border-radius: 12px;
+      border: 2px solid #fed7aa; background: #ffedd5;
+    }
+    .thumb.placeholder {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; color: #c2410c; font-weight: 700; text-align: center; padding: 6px;
+    }
+    .file-btn { font-size: 0.8rem; padding: 8px 10px; }
+    .hint { font-size: 0.8rem; color: #c2410c; margin-top: 4px; }
+    .cover-pick { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .cover-pick img, .cover-pick .thumb { width: 160px; height: 100px; object-fit: cover; border-radius: 12px; }
+    .pantry-add { display: flex; gap: 8px; margin-top: 10px; }
+    .pantry-add input { flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>食譜庫 · Pixel Kitchen</h1>
+        <div class="sub">菜系標籤 · 屋企材料篩選 · 像素教學圖</div>
+      </div>
+      <button class="primary" id="btnNew">＋ 新增已煮食譜</button>
+    </header>
+
+    <section id="viewList">
+      <div class="filters">
+        <h3>菜系</h3>
+        <div class="chip-row" id="cuisineFilters"></div>
+        <h3 style="margin-top:14px">屋企有咩材料？（揀完顯示可煮／差少少嘅食譜）</h3>
+        <div class="chip-row" id="pantryFilters"></div>
+        <div class="pantry-add">
+          <input id="pantryCustom" placeholder="加自訂材料，例如：豆腐" />
+          <button type="button" class="ghost" id="btnPantryAdd">加入</button>
+          <button type="button" class="ghost" id="btnPantryClear">清空</button>
+        </div>
+        <div class="hint" id="pantryHint">未揀材料時顯示全部食譜。</div>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="搜尋菜名或材料…" style="flex:1;min-width:180px" />
+        <select id="sort" style="width:auto;min-width:140px">
+          <option value="newest">最新優先</option>
+          <option value="match">可煮優先</option>
+          <option value="oldest">最舊優先</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+        </select>
+      </div>
+      <div id="cards" class="cards"></div>
+      <div id="empty" class="empty hidden">未有食譜。</div>
+    </section>
+
+    <section id="viewForm" class="panel hidden">
+      <h2 id="formTitle" style="margin-top:0">新增已煮食譜</h2>
+      <input type="hidden" id="editId" />
+      <div class="field">
+        <label>菜名 *</label>
+        <input id="title" placeholder="例如：番茄炒蛋" />
+      </div>
+      <div class="field">
+        <label>菜系標籤（可多選）</label>
+        <div class="chip-row" id="cuisinePickers"></div>
+      </div>
+      <div class="field">
+        <label>成品圖</label>
+        <div class="cover-pick">
+          <div id="coverPreview" class="thumb placeholder">未有圖</div>
+          <div>
+            <input type="file" id="coverFile" accept="image/*" />
+            <div class="hint">可上載圖片；示範食譜已有 AI 像素圖。</div>
+          </div>
+        </div>
+        <input type="hidden" id="coverData" />
+      </div>
+      <div class="grid">
+        <div class="field"><label>份量</label><input id="servings" placeholder="例如：2 人份" /></div>
+        <div class="field"><label>時間</label><input id="time" placeholder="例如：25 分鐘" /></div>
+      </div>
+      <div class="field">
+        <label>材料（名稱用於篩選；說明可寫用量） *</label>
+        <div id="ingEditors"></div>
+        <button type="button" class="ghost" id="btnAddIng">＋ 加材料</button>
+      </div>
+      <div class="field">
+        <label>做法步驟 *</label>
+        <div id="stepEditors"></div>
+        <button type="button" class="ghost" id="btnAddStep">＋ 加步驟</button>
+      </div>
+      <div class="field">
+        <label>備註</label>
+        <textarea id="notes" placeholder="火候、變化、來源…"></textarea>
+      </div>
+      <div class="actions">
+        <button class="primary" id="btnSave">儲存</button>
+        <button class="ghost" id="btnCancelForm">取消</button>
+      </div>
+    </section>
+
+    <section id="viewDetail" class="panel hidden">
+      <div class="actions" style="margin-top:0;margin-bottom:12px">
+        <button class="ghost" id="btnBack">← 返回</button>
+        <button class="ghost" id="btnEdit">編輯</button>
+        <button class="danger" id="btnDelete">刪除</button>
+      </div>
+      <img id="dCover" class="hero hidden" alt="成品圖" />
+      <h2 class="detail-title" id="dTitle"></h2>
+      <div class="meta" id="dMeta"></div>
+      <div class="chip-row" id="dCuisines" style="margin:8px 0 4px"></div>
+      <div class="section-title">材料 · 教學圖</div>
+      <div id="dIngredients"></div>
+      <div class="section-title">做法 · 逐步教學圖</div>
+      <div id="dSteps"></div>
+      <div id="dNotesWrap" class="hidden">
+        <div class="section-title">備註</div>
+        <div class="notes" id="dNotes"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const KEY = "recipe-box.v3";
+    const OLD_KEYS = ["recipe-box.v2", "recipe-box.v1"];
+    const PANTRY_KEY = "recipe-box.pantry";
+    const CUISINES = ["粵菜", "家常", "川菜", "湘菜", "日式", "韓式", "西式", "匈牙利", "泰式", "素食", "甜品", "湯水", "其他"];
+    const $ = (id) => document.getElementById(id);
+
+    const DEMO = {
+      id: "demo-tomato-egg",
+      title: "番茄炒蛋",
+      servings: "2 人份",
+      time: "20 分鐘",
+      cuisines: ["粵菜", "家常"],
+      cover: "images/recipe-tomato-egg.jpg",
+      ingredients: [
+        { name: "雞蛋", text: "雞蛋 3 隻", image: "images/ing-eggs.jpg" },
+        { name: "番茄", text: "番茄 2 個", image: "images/ing-tomato.jpg" },
+        { name: "蔥", text: "蔥花 少許", image: "images/ing-scallion.jpg" }
+      ],
+      steps: [
+        { text: "番茄切塊，準備蔥花。", image: "images/step-cut-tomato.jpg", tags: ["切配"] },
+        { text: "炒蛋至半熟取出。", image: "images/step-scramble-egg.jpg", tags: ["煎炒"] },
+        { text: "炒番茄後拌入雞蛋，加蔥花即成。", image: "images/step-mix.jpg", tags: ["混合"] }
+      ],
+      notes: "示範：菜系標籤 + 材料篩選 + AI 像素教學圖。",
+      createdAt: Date.now() - 1000,
+      updatedAt: Date.now() - 1000
+    };
+
+    function norm(s) {
+      return String(s || "").trim().toLowerCase().replace(/\s+/g, "");
+    }
+    function migrateItem(x) {
+      if (typeof x === "string") return { name: x.split(/\s+/)[0] || x, text: x, image: "", tags: [] };
+      return {
+        name: x.name || (x.text || "").split(/\s+/)[0] || "",
+        text: x.text || x.name || "",
+        image: x.image || "",
+        tags: Array.isArray(x.tags) ? x.tags : []
+      };
+    }
+    function migrate(list) {
+      return (list || []).map(r => ({
+        ...r,
+        cuisines: Array.isArray(r.cuisines) ? r.cuisines : (r.cuisine ? [r.cuisine] : []),
+        cover: r.cover || "",
+        ingredients: (r.ingredients || []).map(migrateItem),
+        steps: (r.steps || []).map(x => {
+          const s = migrateItem(x);
+          return { text: s.text, image: s.image, tags: s.tags };
+        })
+      }));
+    }
+    function load() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) return migrate(JSON.parse(raw));
+        for (const k of OLD_KEYS) {
+          const old = localStorage.getItem(k);
+          if (old) {
+            const migrated = migrate(JSON.parse(old));
+            save(migrated);
+            return migrated;
+          }
+        }
+      } catch {}
+      return [];
+    }
+    function save(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+    function loadPantry() {
+      try { return JSON.parse(localStorage.getItem(PANTRY_KEY) || "[]"); } catch { return []; }
+    }
+    function savePantry(list) { localStorage.setItem(PANTRY_KEY, JSON.stringify(list)); }
+    function uid() {
+      return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+    }
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+
+    const DEMO_GOULASH = {
+      id: "demo-goulash",
+      title: "Goulash（匈牙利燉牛肉）",
+      servings: "2–4 人份",
+      time: "約 1.5–2 小時",
+      cuisines: ["匈牙利", "西式", "湯水"],
+      cover: "images/recipe-goulash.jpg",
+      ingredients: [
+        { name: "牛腩", text: "牛腩（beef chuck）適量，切大塊", image: "images/ing-beef.jpg" },
+        { name: "鹽", text: "鹽、黑胡椒（醃 10 分鐘）", image: "" },
+        { name: "洋蔥", text: "洋蔥，切絲", image: "images/ing-onion.jpg" },
+        { name: "紅蘿蔔", text: "紅蘿蔔 1–3 條，切大塊", image: "images/ing-potato-carrot.jpg" },
+        { name: "番茄膏", text: "番茄膏（tomato paste）1 湯匙", image: "images/ing-paprika.jpg" },
+        { name: "清水", text: "清水：水位浸到紅蘿蔔，唔好浸過肉", image: "" }
+      ],
+      steps: [
+        { text: "牛腩切大塊，洒鹽同黑胡椒醃 10 分鐘。", image: "images/step-goulash-prep.jpg", tags: ["醃製"] },
+        { text: "熱鑊少油，將牛腩煎至表面金黃，取出；同一鑊炒洋蔥絲至軟身。", image: "images/step-goulash-sear.jpg", tags: ["煎炒"] },
+        { text: "下紅蘿蔔大塊同 1 湯匙番茄膏炒勻；加水至浸到紅蘿蔔（唔好浸過肉），蓋蓋細火燉至肉軟，試味即成。", image: "images/step-goulash-simmer.jpg", tags: ["燉煮"] }
+      ],
+      notes: "紅蘿蔔保鮮：整條唔切可放雪櫃約 2–3 星期；切咗大約 3–4 日要用完。",
+      createdAt: Date.now() - 500,
+      updatedAt: Date.now() - 500
+    };
+
+    const SEED = [DEMO, DEMO_GOULASH];
+
+    let recipes = load();
+    SEED.forEach(demo => {
+      if (!recipes.some(r => r.id === demo.id)) {
+        recipes.unshift(demo);
+      } else {
+        recipes = recipes.map(r => r.id === demo.id ? { ...demo, createdAt: r.createdAt, updatedAt: Date.now() } : r);
+      }
+    });
+    save(recipes);
+
+    let currentId = null;
+    let draftIngs = [];
+    let draftSteps = [];
+    let draftCuisines = [];
+    let selectedCuisines = [];
+    let pantry = loadPantry();
+
+    function allIngredientNames() {
+      const set = new Set(pantry);
+      recipes.forEach(r => (r.ingredients || []).forEach(i => {
+        const n = (i.name || i.text || "").trim();
+        if (n) set.add(n.split(/[\s，,、]+/)[0]);
+      }));
+      return Array.from(set).filter(Boolean).sort((a, b) => a.localeCompare(b, "zh-Hant"));
+    }
+
+    function recipeMatch(r) {
+      if (!pantry.length) return { score: 0, missing: [], kind: "none" };
+      const needed = (r.ingredients || []).map(i => (i.name || i.text || "").trim()).filter(Boolean);
+      const missing = [];
+      let hit = 0;
+      needed.forEach(need => {
+        const ok = pantry.some(p => {
+          const a = norm(p), b = norm(need);
+          return a && b && (b.includes(a) || a.includes(b));
+        });
+        if (ok) hit++; else missing.push(need);
+      });
+      if (!needed.length) return { score: 0, missing: [], kind: "none" };
+      if (missing.length === 0) return { score: 2, missing, kind: "full" };
+      if (hit > 0) return { score: 1, missing, kind: "partial" };
+      return { score: 0, missing, kind: "none" };
+    }
+
+    function show(view) {
+      ["viewList", "viewForm", "viewDetail"].forEach(id => {
+        $(id).classList.toggle("hidden", id !== view);
+      });
+    }
+
+    function renderFilterChips() {
+      const cBox = $("cuisineFilters");
+      cBox.innerHTML = "";
+      const all = document.createElement("button");
+      all.type = "button";
+      all.className = "tag cuisine" + (selectedCuisines.length === 0 ? " active" : "");
+      all.textContent = "全部";
+      all.addEventListener("click", () => { selectedCuisines = []; renderFilterChips(); renderList(); });
+      cBox.appendChild(all);
+      CUISINES.forEach(c => {
+        const used = recipes.some(r => (r.cuisines || []).includes(c));
+        if (!used && !selectedCuisines.includes(c)) return;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tag cuisine" + (selectedCuisines.includes(c) ? " active" : "");
+        btn.textContent = c;
+        btn.addEventListener("click", () => {
+          selectedCuisines = selectedCuisines.includes(c)
+            ? selectedCuisines.filter(x => x !== c)
+            : selectedCuisines.concat(c);
+          renderFilterChips();
+          renderList();
+        });
+        cBox.appendChild(btn);
+      });
+
+      const pBox = $("pantryFilters");
+      pBox.innerHTML = "";
+      allIngredientNames().forEach(name => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tag ing" + (pantry.some(p => norm(p) === norm(name)) ? " active" : "");
+        btn.textContent = name;
+        btn.addEventListener("click", () => {
+          if (pantry.some(p => norm(p) === norm(name))) {
+            pantry = pantry.filter(p => norm(p) !== norm(name));
+          } else {
+            pantry = pantry.concat(name);
+          }
+          savePantry(pantry);
+          renderFilterChips();
+          renderList();
+        });
+        pBox.appendChild(btn);
+      });
+      $("pantryHint").textContent = pantry.length
+        ? `已揀 ${pantry.length} 樣：綠框＝材料齊；黃框＝差少少。`
+        : "未揀材料時顯示全部食譜。";
+    }
+
+    function filteredSorted() {
+      const q = $("search").value.trim().toLowerCase();
+      let list = recipes.slice();
+      if (selectedCuisines.length) {
+        list = list.filter(r => selectedCuisines.some(c => (r.cuisines || []).includes(c)));
+      }
+      if (q) {
+        list = list.filter(r =>
+          r.title.toLowerCase().includes(q) ||
+          (r.ingredients || []).map(i => i.text + " " + (i.name || "")).join(" ").toLowerCase().includes(q) ||
+          (r.cuisines || []).join(" ").toLowerCase().includes(q) ||
+          (r.notes || "").toLowerCase().includes(q)
+        );
+      }
+      if (pantry.length) {
+        list = list.filter(r => recipeMatch(r).score > 0);
+      }
+      const sort = $("sort").value;
+      list.sort((a, b) => {
+        if (sort === "match") {
+          const d = recipeMatch(b).score - recipeMatch(a).score;
+          if (d) return d;
+        }
+        if (sort === "newest") return (b.updatedAt || 0) - (a.updatedAt || 0);
+        if (sort === "oldest") return (a.updatedAt || 0) - (b.updatedAt || 0);
+        if (sort === "az") return a.title.localeCompare(b.title, "zh-Hant");
+        if (sort === "za") return b.title.localeCompare(a.title, "zh-Hant");
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      });
+      return list;
+    }
+
+    function renderList() {
+      renderFilterChips();
+      const list = filteredSorted();
+      const cards = $("cards");
+      cards.innerHTML = "";
+      if (recipes.length === 0) {
+        $("empty").textContent = "未有食譜。撳右上開始記錄你煮過嘅菜。";
+        $("empty").classList.remove("hidden");
+      } else if (list.length === 0) {
+        $("empty").textContent = pantry.length
+          ? "呢啲材料暫時煮唔到庫入面嘅菜。試下加多啲材料或者清空篩選。"
+          : "搵唔到符合嘅食譜。";
+        $("empty").classList.remove("hidden");
+      } else {
+        $("empty").classList.add("hidden");
+      }
+      list.forEach(r => {
+        const m = recipeMatch(r);
+        const el = document.createElement("article");
+        el.className = "card" + (m.kind === "full" ? " match" : m.kind === "partial" ? " partial" : "");
+        const cover = r.cover
+          ? `<img class="card-cover" src="${r.cover}" alt="" />`
+          : `<div class="card-cover"></div>`;
+        el.innerHTML = `${cover}<div class="card-body"><h3></h3><div class="meta tags"></div><div class="meta info"></div></div>`;
+        el.querySelector("h3").textContent = r.title;
+        const tags = el.querySelector(".tags");
+        (r.cuisines || []).forEach(c => {
+          const s = document.createElement("span"); s.className = "tag cuisine static"; s.textContent = c; tags.appendChild(s);
+        });
+        if (m.kind === "full") {
+          const b = document.createElement("span"); b.className = "match-badge full"; b.textContent = "材料齊，可煮"; tags.appendChild(b);
+        } else if (m.kind === "partial") {
+          const b = document.createElement("span"); b.className = "match-badge partial";
+          b.textContent = `差 ${m.missing.length} 樣`; tags.appendChild(b);
+        }
+        const info = el.querySelector(".info");
+        if (r.servings) { const c = document.createElement("span"); c.className = "chip"; c.textContent = r.servings; info.appendChild(c); }
+        if (r.time) { const c = document.createElement("span"); c.className = "chip"; c.textContent = r.time; info.appendChild(c); }
+        const count = document.createElement("span");
+        count.className = "chip";
+        count.textContent = `${(r.ingredients || []).length} 材料 · ${(r.steps || []).length} 步`;
+        info.appendChild(count);
+        el.addEventListener("click", () => openDetail(r.id));
+        cards.appendChild(el);
+      });
+      show("viewList");
+    }
+
+    function setCoverPreview(src) {
+      let box = $("coverPreview");
+      if (src) {
+        if (box.tagName !== "IMG") {
+          const img = document.createElement("img");
+          img.id = "coverPreview";
+          img.className = "thumb";
+          box.replaceWith(img);
+          box = img;
+        }
+        box.src = src;
+        box.className = "thumb";
+      } else {
+        if (box.tagName === "IMG") {
+          const div = document.createElement("div");
+          div.id = "coverPreview";
+          div.className = "thumb placeholder";
+          div.textContent = "未有圖";
+          box.replaceWith(div);
+        } else {
+          box.className = "thumb placeholder";
+          box.textContent = "未有圖";
+        }
+      }
+      $("coverData").value = src || "";
+    }
+
+    function renderCuisinePickers() {
+      const box = $("cuisinePickers");
+      box.innerHTML = "";
+      CUISINES.forEach(c => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tag cuisine" + (draftCuisines.includes(c) ? " active" : "");
+        btn.textContent = c;
+        btn.addEventListener("click", () => {
+          draftCuisines = draftCuisines.includes(c)
+            ? draftCuisines.filter(x => x !== c)
+            : draftCuisines.concat(c);
+          renderCuisinePickers();
+        });
+        box.appendChild(btn);
+      });
+    }
+
+    function renderEditors() {
+      const ingBox = $("ingEditors");
+      ingBox.innerHTML = "";
+      draftIngs.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "row-editor";
+        row.innerHTML = `
+          <div class="top">
+            <div class="thumb-slot"></div>
+            <div>
+              <input class="ing-name" placeholder="材料名稱（篩選用）例如：雞蛋" style="margin-bottom:6px" />
+              <input class="ing-text" placeholder="顯示說明／用量 例如：雞蛋 3 隻" />
+              <input type="file" accept="image/*" class="ing-file" style="margin-top:8px" />
+            </div>
+            <button type="button" class="ghost file-btn rem">刪除</button>
+          </div>`;
+        const slot = row.querySelector(".thumb-slot");
+        if (item.image) {
+          const img = document.createElement("img");
+          img.className = "thumb"; img.src = item.image; img.alt = "";
+          slot.appendChild(img);
+        } else {
+          const ph = document.createElement("div");
+          ph.className = "thumb placeholder"; ph.textContent = "材料圖";
+          slot.appendChild(ph);
+        }
+        row.querySelector(".ing-name").value = item.name || "";
+        row.querySelector(".ing-text").value = item.text || "";
+        row.querySelector(".ing-name").addEventListener("input", e => { draftIngs[idx].name = e.target.value; });
+        row.querySelector(".ing-text").addEventListener("input", e => { draftIngs[idx].text = e.target.value; });
+        row.querySelector(".ing-file").addEventListener("change", async e => {
+          const f = e.target.files && e.target.files[0];
+          if (!f) return;
+          draftIngs[idx].image = await fileToDataUrl(f);
+          renderEditors();
+        });
+        row.querySelector(".rem").addEventListener("click", () => { draftIngs.splice(idx, 1); renderEditors(); });
+        ingBox.appendChild(row);
+      });
+
+      const stepBox = $("stepEditors");
+      stepBox.innerHTML = "";
+      draftSteps.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "row-editor";
+        row.innerHTML = `
+          <div class="top">
+            <div class="thumb-slot"></div>
+            <div>
+              <textarea class="step-text" placeholder="步驟 ${idx + 1}"></textarea>
+              <input class="step-tags" placeholder="步驟標籤（可選，逗號分隔）例如：煎炒,混合" style="margin-top:6px" />
+              <input type="file" accept="image/*" class="step-file" style="margin-top:8px" />
+            </div>
+            <button type="button" class="ghost file-btn rem">刪除</button>
+          </div>`;
+        const slot = row.querySelector(".thumb-slot");
+        if (item.image) {
+          const img = document.createElement("img");
+          img.className = "thumb"; img.src = item.image; img.alt = "";
+          slot.appendChild(img);
+        } else {
+          const ph = document.createElement("div");
+          ph.className = "thumb placeholder"; ph.textContent = "步驟圖";
+          slot.appendChild(ph);
+        }
+        row.querySelector(".step-text").value = item.text || "";
+        row.querySelector(".step-tags").value = (item.tags || []).join(",");
+        row.querySelector(".step-text").addEventListener("input", e => { draftSteps[idx].text = e.target.value; });
+        row.querySelector(".step-tags").addEventListener("input", e => {
+          draftSteps[idx].tags = e.target.value.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
+        });
+        row.querySelector(".step-file").addEventListener("change", async e => {
+          const f = e.target.files && e.target.files[0];
+          if (!f) return;
+          draftSteps[idx].image = await fileToDataUrl(f);
+          renderEditors();
+        });
+        row.querySelector(".rem").addEventListener("click", () => { draftSteps.splice(idx, 1); renderEditors(); });
+        stepBox.appendChild(row);
+      });
+    }
+
+    function openForm(recipe) {
+      $("formTitle").textContent = recipe ? "編輯食譜" : "新增已煮食譜";
+      $("editId").value = recipe ? recipe.id : "";
+      $("title").value = recipe ? recipe.title : "";
+      $("servings").value = recipe ? (recipe.servings || "") : "";
+      $("time").value = recipe ? (recipe.time || "") : "";
+      $("notes").value = recipe ? (recipe.notes || "") : "";
+      draftCuisines = recipe ? (recipe.cuisines || []).slice() : ["家常"];
+      renderCuisinePickers();
+      let preview = $("coverPreview");
+      if (preview.tagName === "IMG") {
+        const div = document.createElement("div");
+        div.id = "coverPreview";
+        preview.replaceWith(div);
+      }
+      setCoverPreview(recipe ? (recipe.cover || "") : "");
+      draftIngs = recipe && recipe.ingredients && recipe.ingredients.length
+        ? recipe.ingredients.map(x => ({ ...x, tags: x.tags || [] }))
+        : [{ name: "", text: "", image: "", tags: [] }, { name: "", text: "", image: "", tags: [] }];
+      draftSteps = recipe && recipe.steps && recipe.steps.length
+        ? recipe.steps.map(x => ({ ...x, tags: x.tags || [] }))
+        : [{ text: "", image: "", tags: [] }, { text: "", image: "", tags: [] }];
+      renderEditors();
+      show("viewForm");
+      $("title").focus();
+    }
+
+    function openDetail(id) {
+      const r = recipes.find(x => x.id === id);
+      if (!r) return renderList();
+      currentId = id;
+      $("dTitle").textContent = r.title;
+      const cover = $("dCover");
+      if (r.cover) { cover.src = r.cover; cover.classList.remove("hidden"); }
+      else cover.classList.add("hidden");
+      const meta = $("dMeta");
+      meta.innerHTML = "";
+      if (r.servings) { const s = document.createElement("span"); s.className = "chip"; s.textContent = r.servings; meta.appendChild(s); }
+      if (r.time) { const s = document.createElement("span"); s.className = "chip"; s.textContent = r.time; meta.appendChild(s); }
+      const m = recipeMatch(r);
+      if (m.kind === "full") {
+        const b = document.createElement("span"); b.className = "match-badge full"; b.textContent = "屋企材料齊"; meta.appendChild(b);
+      } else if (m.kind === "partial") {
+        const b = document.createElement("span"); b.className = "match-badge partial";
+        b.textContent = "仲差：" + m.missing.join("、"); meta.appendChild(b);
+      }
+      const dc = $("dCuisines");
+      dc.innerHTML = "";
+      (r.cuisines || []).forEach(c => {
+        const s = document.createElement("span"); s.className = "tag cuisine static"; s.textContent = c; dc.appendChild(s);
+      });
+
+      const ing = $("dIngredients");
+      ing.innerHTML = "";
+      (r.ingredients || []).forEach(item => {
+        const row = document.createElement("div");
+        row.className = "media-row";
+        row.innerHTML = item.image ? `<img alt="" /><div></div>` : `<div class="thumb placeholder">無圖</div><div></div>`;
+        if (item.image) row.querySelector("img").src = item.image;
+        const box = row.children[1];
+        const title = document.createElement("div");
+        title.style.fontWeight = "800";
+        title.textContent = item.name || item.text;
+        box.appendChild(title);
+        if (item.text && item.text !== item.name) {
+          const sub = document.createElement("div");
+          sub.style.marginTop = "4px";
+          sub.textContent = item.text;
+          box.appendChild(sub);
+        }
+        ing.appendChild(row);
+      });
+
+      const steps = $("dSteps");
+      steps.innerHTML = "";
+      (r.steps || []).forEach((item, i) => {
+        const row = document.createElement("div");
+        row.className = "step-row";
+        const title = document.createElement("div");
+        title.innerHTML = `<span class="step-num">${i + 1}</span>`;
+        const txt = document.createElement("span");
+        txt.textContent = item.text;
+        title.appendChild(txt);
+        row.appendChild(title);
+        if (item.tags && item.tags.length) {
+          const tr = document.createElement("div");
+          tr.className = "chip-row";
+          item.tags.forEach(t => {
+            const s = document.createElement("span"); s.className = "tag static"; s.textContent = t; tr.appendChild(s);
+          });
+          row.appendChild(tr);
+        }
+        if (item.image) {
+          const img = document.createElement("img");
+          img.src = item.image; img.alt = `步驟 ${i + 1}`;
+          row.appendChild(img);
+        }
+        steps.appendChild(row);
+      });
+
+      if (r.notes && r.notes.trim()) {
+        $("dNotesWrap").classList.remove("hidden");
+        $("dNotes").textContent = r.notes;
+      } else $("dNotesWrap").classList.add("hidden");
+      show("viewDetail");
+    }
+
+    $("btnNew").addEventListener("click", () => openForm(null));
+    $("btnAddIng").addEventListener("click", () => { draftIngs.push({ name: "", text: "", image: "", tags: [] }); renderEditors(); });
+    $("btnAddStep").addEventListener("click", () => { draftSteps.push({ text: "", image: "", tags: [] }); renderEditors(); });
+    $("coverFile").addEventListener("change", async e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      setCoverPreview(await fileToDataUrl(f));
+    });
+    $("btnCancelForm").addEventListener("click", () => { if (currentId) openDetail(currentId); else renderList(); });
+    $("btnBack").addEventListener("click", () => { currentId = null; renderList(); });
+    $("btnEdit").addEventListener("click", () => {
+      const r = recipes.find(x => x.id === currentId);
+      if (r) openForm(r);
+    });
+    $("btnDelete").addEventListener("click", () => {
+      if (!currentId) return;
+      if (!confirm("確定刪除呢個食譜？")) return;
+      recipes = recipes.filter(x => x.id !== currentId);
+      save(recipes);
+      currentId = null;
+      renderList();
+    });
+    $("btnSave").addEventListener("click", () => {
+      const title = $("title").value.trim();
+      const ingredients = draftIngs.map(x => ({
+        name: (x.name || x.text || "").trim().split(/[\s，,、]+/)[0],
+        text: (x.text || x.name || "").trim(),
+        image: x.image || "",
+        tags: x.tags || []
+      })).filter(x => x.text || x.name);
+      const steps = draftSteps.map(x => ({
+        text: (x.text || "").trim(),
+        image: x.image || "",
+        tags: x.tags || []
+      })).filter(x => x.text);
+      if (!title || !ingredients.length || !steps.length) {
+        alert("請填菜名、至少一樣材料同一個步驟。");
+        return;
+      }
+      const id = $("editId").value || uid();
+      const existing = recipes.find(x => x.id === id);
+      const next = {
+        id, title,
+        servings: $("servings").value.trim(),
+        time: $("time").value.trim(),
+        cuisines: draftCuisines.slice(),
+        cover: $("coverData").value || (existing && existing.cover) || "",
+        ingredients, steps,
+        notes: $("notes").value.trim(),
+        createdAt: existing ? existing.createdAt : Date.now(),
+        updatedAt: Date.now()
+      };
+      if (existing) recipes = recipes.map(x => x.id === id ? next : x);
+      else recipes.unshift(next);
+      save(recipes);
+      currentId = id;
+      openDetail(id);
+    });
+    $("btnPantryAdd").addEventListener("click", () => {
+      const v = $("pantryCustom").value.trim();
+      if (!v) return;
+      if (!pantry.some(p => norm(p) === norm(v))) pantry.push(v);
+      savePantry(pantry);
+      $("pantryCustom").value = "";
+      renderList();
+    });
+    $("btnPantryClear").addEventListener("click", () => {
+      pantry = [];
+      savePantry(pantry);
+      renderList();
+    });
+    $("search").addEventListener("input", renderList);
+    $("sort").addEventListener("change", renderList);
+    renderList();
+  </script>
+</body>
+</html>
