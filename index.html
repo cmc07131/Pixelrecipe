@@ -368,25 +368,34 @@
 
     const DEMO_GOULASH = {
       id: "demo-goulash",
-      title: "Goulash（匈牙利燉牛肉）",
+      title: "Gulyás／Goulash（匈牙利牛肉湯）",
       servings: "2–4 人份",
-      time: "約 1.5–2 小時",
+      time: "約 2–2.5 小時",
       cuisines: ["匈牙利", "西式", "湯水"],
       cover: "images/recipe-goulash.jpg",
       ingredients: [
-        { name: "牛腩", text: "牛腩（beef chuck）適量，切大塊", image: "images/ing-beef.jpg" },
-        { name: "鹽", text: "鹽、黑胡椒（醃 10 分鐘）", image: "" },
-        { name: "洋蔥", text: "洋蔥，切絲", image: "images/ing-onion.jpg" },
-        { name: "紅蘿蔔", text: "紅蘿蔔 1–3 條，切大塊", image: "images/ing-potato-carrot.jpg" },
-        { name: "番茄膏", text: "番茄膏（tomato paste）1 湯匙", image: "images/ing-paprika.jpg" },
-        { name: "清水", text: "清水：水位浸到紅蘿蔔，唔好浸過肉", image: "" }
+        { name: "牛腩", text: "牛腩（beef chuck）約 700 g，切 3–4 cm 大塊", image: "images/ing-beef.jpg" },
+        { name: "洋蔥", text: "洋蔥 2 個大顆（約 400 g），切細丁", image: "images/ing-onion.jpg" },
+        { name: "豬油", text: "豬油或中性油 2–3 湯匙", image: "" },
+        { name: "匈牙利紅椒粉", text: "匈牙利甜紅椒粉（sweet paprika）2–3 湯匙", image: "images/ing-paprika.jpg" },
+        { name: "大蒜", text: "大蒜 2–3 瓣，切碎", image: "" },
+        { name: "葛縷子", text: "葛縷子（caraway）籽 1 茶匙，可略壓碎", image: "" },
+        { name: "青椒", text: "青椒或匈牙利椒 1–2 個，切大塊", image: "" },
+        { name: "紅蘿蔔", text: "紅蘿蔔 1–2 條（約 150 g），切大塊", image: "images/ing-potato-carrot.jpg" },
+        { name: "薯仔", text: "薯仔 2–3 個中等（約 300 g），切大塊（可選）", image: "images/ing-potato-carrot.jpg" },
+        { name: "番茄", text: "番茄 1 個中等切丁，或番茄膏 1 茶匙（輔助上色，唔係主味）", image: "images/ing-tomato.jpg" },
+        { name: "鹽", text: "鹽約 1½ 茶匙、黑胡椒少許（按喜好調整）", image: "" },
+        { name: "清水", text: "清水或清牛湯約 1–1.2 L（湯水要豐富，似湯多過似濃汁）", image: "" }
       ],
       steps: [
-        { text: "牛腩切大塊，洒鹽同黑胡椒醃 10 分鐘。", image: "images/step-goulash-prep.jpg", tags: ["醃製"] },
-        { text: "熱鑊少油，將牛腩煎至表面金黃，取出；同一鑊炒洋蔥絲至軟身。", image: "images/step-goulash-sear.jpg", tags: ["煎炒"] },
-        { text: "下紅蘿蔔大塊同 1 湯匙番茄膏炒勻；加水至浸到紅蘿蔔（唔好浸過肉），蓋蓋細火燉至肉軟，試味即成。", image: "images/step-goulash-simmer.jpg", tags: ["燉煮"] }
+        { text: "牛腩抹乾切大塊；洋蔥切細丁；青椒、紅蘿蔔、薯仔切大塊；大蒜切碎。材料擺齊備用。", image: "images/step-goulash-prep.jpg", tags: ["切配"] },
+        { text: "厚底鍋用中小火，熱油後下洋蔥丁，慢慢炒至透亮軟身（約 10–15 分鐘），唔好炒焦。", image: "images/step-goulash-sear.jpg", tags: ["炒香"] },
+        { text: "關火或離火，立刻加入紅椒粉攪勻（避免燒焦變苦），再加少許清水或湯「解鍋」炒出香氣；然後下大蒜、葛縷子籽同牛肉塊，拌勻至每面都沾到紅椒。", image: "", tags: ["調味"] },
+        { text: "倒入清水或清牛湯至剛好蓋過材料，加鹽同黑胡椒；大火煮滾後轉細火，蓋蓋慢燉約 1–1½ 小時。", image: "images/step-goulash-simmer.jpg", tags: ["燉煮"] },
+        { text: "加入青椒、紅蘿蔔、番茄（或 1 茶匙番茄膏）同薯仔，繼續細火燉至牛肉軟腍、薯仔熟透（再約 30–45 分鐘）。湯水應保持豐富，太少就加水。", image: "", tags: ["燉煮"] },
+        { text: "試味調鹽；撇走表面多餘油脂。可配麵包，或另煮匈牙利小麵片（csipetke）一齊食。", image: "", tags: ["完成"] }
       ],
-      notes: "紅蘿蔔保鮮：整條唔切可放雪櫃約 2–3 星期；切咗大約 3–4 日要用完。",
+      notes: "重點係匈牙利甜紅椒粉（sweet paprika）：要用新鮮、香味足嘅；加入時一定要離火，唔好燒焦，否則會苦。番茄膏只係輔助上色，唔好當主味。葛縷子係傳統香氣，唔好省略。可選配 csipetke（手捏小麵片）或厚切麵包。",
       createdAt: Date.now() - 500,
       updatedAt: Date.now() - 500
     };
